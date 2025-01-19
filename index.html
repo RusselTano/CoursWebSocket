@@ -76,7 +76,7 @@
 
     const chat = document.querySelector(".chat")
     const messageInput = document.querySelector(".message")
-    const messages = document.querySelector(".messages");
+    const messagesDiv = document.querySelector(".messages");
     const buttonSend = document.querySelector(".button-send")
 
     const joinButton = document.getElementById('join');
@@ -104,19 +104,28 @@
       }
     })
 
+    socket.on("loadMessages", (messages) => {
+      messages.forEach(({ username, message, timestamp }) => {
+        const messageElement = document.createElement("p");
+        messageElement.textContent = `[${timestamp}] ${username} : ${message}`;
+        messagesDiv.appendChild(messageElement);
+      });
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    })
+
     // Recevoir les notifications
     socket.on("notification", (message) => {
       const notificationElement = document.createElement("p");
       notificationElement.textContent = message;
-      messages.appendChild(notificationElement);
+      messagesDiv.appendChild(notificationElement);
     })
 
     // Recevoir les messages envoyer du serveur
-    socket.on("message", ({ username, message }) => {
+    socket.on("message", ({ username, message, timestamp }) => {
       const messageElement = document.createElement("p");
-      messageElement.textContent = `${username} : ${message}`;
-      messages.appendChild(messageElement);
-      messages.scrollTop = messages.scrollHeight;
+      messageElement.textContent = `[${timestamp}] ${username} : ${message}`;
+      messagesDiv.appendChild(messageElement);
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
     })
 
     buttonSend.addEventListener("click", sendMessage);

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Socket.IO Cours</title>
+</head>
+
+<body>
+  <h1>Socket.IO Cours</h1>
+  <input class="message" type="text" placeholder="Ecrire un message...">
+  <button onclick="sendMessage()">Envoyer</button>
+  <div class="messages"></div>
+
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script>
+    // Se connecter au serveur socket.IO
+    const socket = io("http://localhost:3000");
+
+    const message = document.querySelector(".message")
+    const messages = document.querySelector(".messages");
+
+    // Ecouter les messages recus du serveur
+    socket.on("message", data => {
+      messages.innerHTML += `<p>${data}</p>`;
+    })
+
+    // Envoyer un message au serveur
+    function sendMessage() {
+      socket.emit("message", message.value);
+      message.value = "";
+    }
+
+    console.log(message, messages);
+
+  </script>
+</body>
+
+</html>

@@ -5,34 +5,138 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Socket.IO Cours</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    #app {
+      max-width: 600px;
+      margin: 20px auto;
+    }
+
+    .messages {
+      border: 1px solid #ddd;
+      padding: 10px;
+      height: 300px;
+      overflow-y: scroll;
+    }
+
+    .chat {
+      display: flex;
+      margin-top: 10px;
+    }
+
+    .message {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+
+    .button-send {
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+
+    #join-container {
+      margin-bottom: 20px;
+    }
+
+    .notification {
+      color: gray;
+      font-style: italic;
+    }
+  </style>
+
+
 </head>
 
 <body>
-  <h1>Socket.IO Cours</h1>
-  <input class="message" type="text" placeholder="Ecrire un message...">
-  <button onclick="sendMessage()">Envoyer</button>
-  <div class="messages"></div>
+  <div id="app">
+    <h1>Socket.IO Cours</h1>
+    <form id="join-container" action="">
+      <input type="text" id="username" placeholder="Nom d'utilisateur" />
+      <input type="text" id="room" placeholder="Nom de la room" />
+      <button id="join">Rejoindre</button>
+    </form>
+    <div class="notifications"></div>
+    <div class="messages"></div>
+    <form class="chat" action="">
+      <input class="message" type="text" placeholder="Ecrire un message...">
+      <button type="button" class="button-send">Envoyer</button>
+    </form>
+  </div>
 
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script>
     // Se connecter au serveur socket.IO
     const socket = io("http://localhost:3000");
 
-    const message = document.querySelector(".message")
+    const chat = document.querySelector(".chat")
+    const messageInput = document.querySelector(".message")
     const messages = document.querySelector(".messages");
+    const buttonSend = document.querySelector(".button-send")
 
-    // Ecouter les messages recus du serveur
-    socket.on("message", data => {
-      messages.innerHTML += `<p>${data}</p>`;
+    const joinButton = document.getElementById('join');
+    const usernameInput = document.getElementById('username');
+    const roomInput = document.getElementById('room');
+
+    const notifications = document.querySelector(".notifications")
+
+
+    // Etat utilisateur
+    let username = "";
+    let room = "";
+
+    // Rejoindre une room
+    joinButton.addEventListener("click", () => {
+      username = usernameInput.value.trim();
+      room = roomInput.value.trim();
+
+      if (username && room) {
+        socket.emit("joinRoom", { username, room });
+        notifications.textContent = `Vous avez rejoint la room : ${room}`;
+        usernameInput.disabled = true;
+        roomInput.disabled = true;
+        joinButton.disabled = true;
+      }
     })
 
+    // Recevoir les notifications
+    socket.on("notification", (message) => {
+      const notificationElement = document.createElement("p");
+      notificationElement.textContent = message;
+      messages.appendChild(notificationElement);
+    })
+
+    // Recevoir les messages envoyer du serveur
+    socket.on("message", ({ username, message }) => {
+      const messageElement = document.createElement("p");
+      messageElement.textContent = `${username} : ${message}`;
+      messages.appendChild(messageElement);
+      messages.scrollTop = messages.scrollHeight;
+    })
+
+    buttonSend.addEventListener("click", sendMessage);
+    chat.addEventListener("submit", sendMessage)
+
+
     // Envoyer un message au serveur
-    function sendMessage() {
-      socket.emit("message", message.value);
-      message.value = "";
+    function sendMessage(e) {
+      e.preventDefault();
+      const message = messageInput.value.trim();
+
+      if (message && room)
+        socket.emit("message", message);
+
+      messageInput.value = "";
+      messageInput.focus();
     }
 
-    console.log(message, messages);
+    // console.log(messageInput, messages, buttonSend, chat);
+    // console.log(joinButton,usernameInput,notifications,roomInput);
 
   </script>
 </body>
